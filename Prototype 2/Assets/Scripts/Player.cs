@@ -3,12 +3,14 @@ public class Player : MonoBehaviour
 {
     private CharacterController character;
     private Vector3 direction;
+    private Renderer playerRenderer; // Reference to Renderer
 
     public float gravity = 9.81f * 2;
     public float jumpForce = 8f;
     private void Awake()
     {
         character = GetComponent<CharacterController>();
+        playerRenderer = GetComponent<Renderer>();
     }
 
     private void OnEnable()
@@ -27,6 +29,7 @@ public class Player : MonoBehaviour
             if (Input.GetButton("Jump"))
             {
                 direction = Vector3.up * jumpForce;
+                AudioManager.Instance.PlaySFX(AudioManager.Instance.jump);
             }
         }
 
@@ -38,6 +41,14 @@ public class Player : MonoBehaviour
         if (other.CompareTag("Obstacle"))
         {
             GameManager.Instance.GameOver();
+        }
+    }
+
+    public void ChangeColor(Color newColor)
+    {
+        if (playerRenderer != null)
+        {
+            playerRenderer.material.color = newColor;
         }
     }
 }
