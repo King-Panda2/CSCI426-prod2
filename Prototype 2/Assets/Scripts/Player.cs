@@ -1,4 +1,5 @@
 using UnityEngine;
+
 public class Player : MonoBehaviour
 {
     private CharacterController character;
@@ -7,18 +8,29 @@ public class Player : MonoBehaviour
 
     public float gravity = 9.81f * 2;
     public float jumpForce = 8f;
+
     private void Awake()
     {
         character = GetComponent<CharacterController>();
         playerRenderer = GetComponent<Renderer>();
+
+        // Create a new material instance to avoid shared material issues
+        if (playerRenderer != null)
+        {
+            playerRenderer.material = new Material(playerRenderer.material);
+        }
+        else
+        {
+            Debug.LogError("Player Renderer component not found!");
+        }
     }
 
     private void OnEnable()
     {
         direction = Vector3.zero;
     }
-    // Update is called once per frame
-    void Update()
+
+    private void Update()
     {
         direction += Vector3.down * gravity * Time.deltaTime;
 
@@ -33,7 +45,7 @@ public class Player : MonoBehaviour
             }
         }
 
-        character.Move(direction *Time.deltaTime);
+        character.Move(direction * Time.deltaTime);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -44,11 +56,19 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void ChangeColor(Color newColor)
+    public void ChangeColor(Color backgroundColor)
     {
-        if (playerRenderer != null)
+        if (playerRenderer == null)
         {
-            playerRenderer.material.color = newColor;
+            Debug.LogError("Player Renderer is not assigned!");
+            return;
         }
+
+        // Calculate complementary color
+        Color complementaryColor = new Color(1f - backgroundColor.r, 1f - backgroundColor.g, 1f - backgroundColor.b);
+
+        // Apply the complementary color to the player's material
+        playerRenderer.material.color = complementaryColor;
+        Debug.Log("Player color changed to: " + complementaryColor);
     }
 }

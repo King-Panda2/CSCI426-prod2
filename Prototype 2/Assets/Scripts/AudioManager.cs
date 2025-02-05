@@ -12,6 +12,12 @@ public class AudioManager : MonoBehaviour
     // Sound effects
     public AudioClip death;
     public AudioClip jump;
+    public AudioClip trumpets;
+    public AudioClip clapping;
+
+
+    public AudioClip winTrack;
+
     public AudioClip background1;
     public AudioClip background2;
     public AudioClip background3;

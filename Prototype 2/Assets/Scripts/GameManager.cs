@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    public Button endlessButton;
+    private bool isEndlessMode = false; // Track if endless mode is enabled
 
     public float gameSpeed { get; private set; }
     public float initialGameSpeed = 5f;
@@ -30,6 +32,8 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+
+        
         if (Instance == null)
         {
             Instance = this;
@@ -38,6 +42,7 @@ public class GameManager : MonoBehaviour
         {
             DestroyImmediate(gameObject);
         }
+        
     }
 
     private void Start()
@@ -45,6 +50,8 @@ public class GameManager : MonoBehaviour
         player = FindObjectOfType<Player>();
         spawner = FindObjectOfType<Spawner>();
         mainCamera = Camera.main; // Get main camera
+        endlessButton.gameObject.SetActive(false); // Hide the button at the start
+        endlessButton.onClick.AddListener(StartEndlessMode); // Assign function to button
 
         NewGame();
     }
@@ -73,6 +80,15 @@ public class GameManager : MonoBehaviour
         stageTimer = 0f;
         UpdateStage();
 
+        for (int i = 1; i < stageEffects.Length; i++)
+        {
+            if (stageEffects[i] != null)
+            {
+
+                stageEffects[i].Stop(); // Stop effects from other stages
+
+            }
+        }
         UpdateHiscore();
     }
 
@@ -102,7 +118,7 @@ public class GameManager : MonoBehaviour
             UpdateStage();
         }
 
-        if(score > 1000)
+        if (score > 1000 && !isEndlessMode)
         {
             Win();
         }
@@ -111,8 +127,7 @@ public class GameManager : MonoBehaviour
     private void UpdateStage()
     {
         // Define colors for each stage
-        Color[] stageColors = { Color.blue, Color.green, Color.yellow, Color.red};
-        Color[] playerColors = { Color.red, Color.blue, Color.green, Color.yellow };
+        Color[] stageColors = { Color.blue, Color.green, Color.yellow, Color.red };
 
         if (audioManager != null)
         {
@@ -133,16 +148,33 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Change player color
-        if (player != null)
-        {
-            player.ChangeColor(playerColors[currentStage]);
-        }
 
-        // Change background color
+        // Update the background color and player color
         if (mainCamera != null)
         {
             StartCoroutine(FadeBackgroundColor(stageColors[currentStage]));
+
+            // Change player color based on complementary background color
+            if (player != null)
+            {
+                player.ChangeColor(stageColors[currentStage]);
+            }
+        }
+
+        // Activate the corresponding Particle System and disable others
+        for (int i = 0; i < stageEffects.Length; i++)
+        {
+            if (stageEffects[i] != null)
+            {
+                if (i == currentStage)
+                {
+                    stageEffects[i].Play(); // Start effect for this stage
+                }
+                else
+                {
+                    //stageEffects[i].Stop(); // Stop effects from other stages
+                }
+            }
         }
 
         Debug.Log($"Stage {currentStage + 1} started! Color changed.");
@@ -178,6 +210,8 @@ public class GameManager : MonoBehaviour
         if (audioManager != null)
         {
             audioManager.PlaySFX(audioManager.death);
+            audioManager.PlayMusic(audioManager.winTrack);
+
         }
 
         UpdateHiscore();
@@ -188,15 +222,19 @@ public class GameManager : MonoBehaviour
         gameSpeed = 0f;
         enabled = false;
 
-        player.gameObject.SetActive(false);
+        //player.gameObject.SetActive(false);
         spawner.gameObject.SetActive(false);
 
         youWinText.gameObject.SetActive(true);
         againButton.gameObject.SetActive(true);
+        endlessButton.gameObject.SetActive(true); // Show Endless Mode button
 
         if (audioManager != null)
         {
-            audioManager.PlaySFX(audioManager.death);
+            audioManager.PlaySFX(audioManager.trumpets);
+            audioManager.PlaySFX(audioManager.clapping);
+            audioManager.PlayMusic(audioManager.winTrack);
+
         }
 
         UpdateHiscore();
@@ -214,4 +252,25 @@ public class GameManager : MonoBehaviour
 
         hiscoreText.text = Mathf.FloorToInt(hiscore).ToString("D5");
     }
+
+    public void StartEndlessMode()
+    {
+        isEndlessMode = true;
+        youWinText.gameObject.SetActive(false);
+        againButton.gameObject.SetActive(false);
+        endlessButton.gameObject.SetActive(false); // Hide the button after starting endless mode
+                                                   // Remove obstacles
+        Obstacle[] obstacles = FindObjectsOfType<Obstacle>(); // Find all active obstacles
+        foreach (Obstacle obstacle in obstacles)
+        {
+            Destroy(obstacle.gameObject); // Destroy each obstacle
+        }
+
+        // Restart the game but keep the player moving
+        player.gameObject.SetActive(true);
+        spawner.gameObject.SetActive(true);
+        gameSpeed = initialGameSpeed;
+        enabled = true;
+    }
+
 }
