@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     public float gameSpeedIncrease = 0.1f;
 
     public TextMeshProUGUI gameOverText;
+    public TextMeshProUGUI youWinText;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI hiscoreText;
     public Button againButton;
@@ -64,6 +65,7 @@ public class GameManager : MonoBehaviour
         player.gameObject.SetActive(true);
         spawner.gameObject.SetActive(true);
         gameOverText.gameObject.SetActive(false);
+        youWinText.gameObject.SetActive(false);
         againButton.gameObject.SetActive(false);
 
         // Reset stage and timer
@@ -93,11 +95,16 @@ public class GameManager : MonoBehaviour
 
         // Update stage timer
         stageTimer += Time.deltaTime;
-        if (stageTimer >= 30f) // Change stage every 30 seconds
+        if (stageTimer >= 20f) // Change stage every 30 seconds
         {
             stageTimer = 0f;
             currentStage = (currentStage + 1) % 4; // Cycle through 4 stages
             UpdateStage();
+        }
+
+        if(score > 1000)
+        {
+            Win();
         }
     }
 
@@ -166,6 +173,25 @@ public class GameManager : MonoBehaviour
         spawner.gameObject.SetActive(false);
 
         gameOverText.gameObject.SetActive(true);
+        againButton.gameObject.SetActive(true);
+
+        if (audioManager != null)
+        {
+            audioManager.PlaySFX(audioManager.death);
+        }
+
+        UpdateHiscore();
+    }
+
+    public void Win()
+    {
+        gameSpeed = 0f;
+        enabled = false;
+
+        player.gameObject.SetActive(false);
+        spawner.gameObject.SetActive(false);
+
+        youWinText.gameObject.SetActive(true);
         againButton.gameObject.SetActive(true);
 
         if (audioManager != null)
